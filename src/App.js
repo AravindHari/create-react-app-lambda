@@ -1,50 +1,61 @@
-import React, { Component } from "react"
-import logo from "./logo.svg"
-import "./App.css"
+import React, { useEffect, useState } from "react";
+import { Card } from "react-bootstrap";
+import axios from "axios";
+import "./App.css";
 
-class LambdaDemo extends Component {
-  constructor(props) {
-    super(props)
-    this.state = { loading: false, msg: null }
-  }
+const App = () => {
+  const [cardData, setCardData] = useState([]);
+  const [visible, setVisible] = useState(5);
 
-  handleClick = api => e => {
-    e.preventDefault()
+  const allCardData = async () => {
+    const response = await axios.get("https://randomuser.me/api/?results=35");
+    setCardData(response.data.results);
+  };
 
-    this.setState({ loading: true })
-    fetch("/.netlify/functions/" + api)
-      .then(response => response.json())
-      .then(json => this.setState({ loading: false, msg: json.msg }))
-  }
+  const loadMore = () => {
+    setVisible(visible + 5);
+  };
 
-  render() {
-    const { loading, msg } = this.state
+  const more = () => {
+    <Card.Text>
+            <ul>
+              <li>{cardData.email}</li>
+              <li>{cardData.cell}</li>
+              <li>{cardData.gender}</li>
+            </ul>
+          </Card.Text>
+  };
 
+  useEffect(() => {
+    allCardData();
+  }, []);
+
+  const renderCard = (person, index) => {
     return (
-      <p>
-        <button onClick={this.handleClick("hello")}>{loading ? "Loading..." : "Call Lambda"}</button>
-        <button onClick={this.handleClick("async-dadjoke")}>{loading ? "Loading..." : "Call Async Lambda"}</button>
-        <br />
-        <span>{msg}</span>
-      </p>
-    )
-  }
-}
+      <Card style={{ width: "18rem" }}>
+        <Card.Img variant="top" src={person.picture.large} />
+        <Card.Body>
+          <Card.Title>
+            {person.name.first} {person.name.last}
+          </Card.Title>
+          <button onClick={more}>Fetch Details</button>
+        </Card.Body>
+      </Card>
+    );
+  };
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <LambdaDemo />
-        </header>
+  return (
+    <div className="App">
+      <div className="wrapper">
+        <div className="cards">
+          {cardData.slice(0, visible).map(renderCard)}
+        </div>
       </div>
-    )
-  }
-}
+      {visible < cardData.length && (
+        <button onClick={loadMore}>Load 5 More</button>
+      )}
+    </div>
+  );
+};
 
-export default App
+export default App;
